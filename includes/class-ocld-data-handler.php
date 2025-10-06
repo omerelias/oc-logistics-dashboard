@@ -199,46 +199,83 @@ class OCLD_Data_Handler {
         $groups_table = $wpdb->prefix . 'oc_woo_shipping_groups';
         $locations_table = $wpdb->prefix . 'oc_woo_shipping_locations';
 
-        // Check if tables exist
         if ( $wpdb->get_var( "SHOW TABLES LIKE '{$locations_table}'" ) != $locations_table ) {
             return array();
         }
 
         $results = $wpdb->get_results(
             "SELECT 
-                l.location_id,
-                l.location_code,
-                l.location_name,
-                l.gm_shapes as coordinates,
-                l.group_id,
-                g.group_name,
-                g.group_order
-             FROM {$locations_table} l
-             INNER JOIN {$groups_table} g ON l.group_id = g.group_id
-             WHERE l.is_enabled = 1 
-             AND l.location_type = 'polygon'
-             AND l.gm_shapes IS NOT NULL
-             AND g.is_enabled = 1
-             ORDER BY g.group_order ASC, l.location_order ASC"
+            l.location_id,
+            l.location_code,
+            l.location_name,
+            l.gm_shapes as coordinates,
+            l.group_id,
+            g.group_name,
+            g.group_order
+         FROM {$locations_table} l
+         INNER JOIN {$groups_table} g ON l.group_id = g.group_id
+         WHERE l.is_enabled = 1 
+         AND l.location_type = 'polygon'
+         AND l.gm_shapes IS NOT NULL
+         AND g.is_enabled = 1
+         ORDER BY g.group_order ASC, l.location_order ASC"
         );
 
-        // Add colors based on group
         $colors = array( '#0073aa', '#46b450', '#ffb900', '#dc3232', '#826eb4', '#00a0d2' );
         $formatted = array();
 
         foreach ( $results as $index => $result ) {
+            $coordinates = null;
+
+            // Try unserialize first
+            if ( is_serialized( $result->coordinates ) ) {
+                $unserialized = maybe_unserialize( $result->coordinates );
+                if ( is_array( $unserialized ) || is_object( $unserialized ) ) {
+                    $coordinates = wp_json_encode( $unserialized );
+                }
+            }
+            // Already JSON
+            elseif ( $this->is_json( $result->coordinates ) ) {
+                $coordinates = $result->coordinates;
+            }
+            // Last resort: try to use as-is
+            else {
+                $coordinates = $result->coordinates;
+            }
+
+            // Skip invalid
+            if ( ! $coordinates ) {
+                error_log( 'OCLD: Skipping polygon ' . $result->location_code . ' - invalid coordinates' );
+                continue;
+            }
+
             $formatted[] = array(
                 'id'          => $result->location_id,
                 'code'        => $result->location_code,
                 'name'        => $result->location_name,
                 'group_id'    => $result->group_id,
                 'group_name'  => $result->group_name,
-                'coordinates' => $result->coordinates,
+                'coordinates' => $coordinates,
                 'color'       => $colors[ $result->group_order % count( $colors ) ],
             );
         }
 
         return $formatted;
+    }
+    /**
+     * Check if string is valid JSON.
+     *
+     * @since    1.0.0
+     * @param    string    $string
+     * @return   bool
+     */
+    private function is_json( $string ) {
+        if ( ! is_string( $string ) ) {
+            return false;
+        }
+
+        json_decode( $string );
+        return json_last_error() === JSON_ERROR_NONE;
     }
 
     /**

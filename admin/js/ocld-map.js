@@ -59,7 +59,7 @@
             // Map options
             const mapOptions = {
                 center: ocldData.mapCenter, // From localized data
-                zoom: ocldData.mapZoom,
+                zoom:  12,
                 mapTypeId: google.maps.MapTypeId.ROADMAP,
                 styles: this.getMapStyles(),
                 streetViewControl: false,
@@ -192,58 +192,90 @@
         /**
          * Render polygons on map
          */
-        renderPolygons: function(polygons) {
-            const self = this;
+            /**
+             * Render polygons on map
+             */
+            renderPolygons: function(polygons) {
+                const self = this;
 
-            polygons.forEach(function(polygonData) {
-                // Parse coordinates
-                let paths = [];
-                try {
-                    paths = JSON.parse(polygonData.coordinates);
-                } catch(e) {
-                    console.error('OCLD: Invalid polygon coordinates', e);
-                    return;
-                }
+                polygons.forEach(function(polygonData) {
+                    console.log('Raw coordinates:', polygonData.coordinates);
 
-                // Create polygon
-                const polygon = new google.maps.Polygon({
-                    paths: paths,
-                    strokeColor: polygonData.color || '#0073aa',
-                    strokeOpacity: 0.8,
-                    strokeWeight: 2,
-                    fillColor: polygonData.color || '#0073aa',
-                    fillOpacity: 0.15,
-                    map: self.map,
-                    clickable: true
-                });
+                    // Parse coordinates
+                    let parsedData = null;
+                    try {
+                        if (typeof polygonData.coordinates === 'string') {
+                            parsedData = JSON.parse(polygonData.coordinates);
+                        } else if (typeof polygonData.coordinates === 'object') {
+                            parsedData = polygonData.coordinates;
+                        } else {
+                            console.error('OCLD: Unexpected coordinates format', polygonData.coordinates);
+                            return;
+                        }
+                    } catch(e) {
+                        console.error('OCLD: Invalid polygon coordinates', e);
+                        return;
+                    }
 
-                // Store polygon with data
-                polygon.data = polygonData;
-                self.polygons.push(polygon);
+                    // Extract gm_shapes from parsed data
+                    let paths = parsedData.gm_shapes || parsedData;
 
-                // Click event
-                google.maps.event.addListener(polygon, 'click', function(event) {
-                    self.onPolygonClick(polygon, event);
-                });
+                    if (!Array.isArray(paths)) {
+                        console.error('OCLD: gm_shapes is not an array', paths);
+                        return;
+                    }
 
-                // Hover events
-                google.maps.event.addListener(polygon, 'mouseover', function() {
-                    polygon.setOptions({
-                        fillOpacity: 0.3,
-                        strokeWeight: 3
+                    // ✨ זה החלק החדש - המרה ל-numbers
+                    paths = paths.map(function(path) {
+                        return path.map(function(coord) {
+                            return {
+                                lat: parseFloat(coord.lat),
+                                lng: parseFloat(coord.lng)
+                            };
+                        });
                     });
-                });
 
-                google.maps.event.addListener(polygon, 'mouseout', function() {
-                    polygon.setOptions({
+                    console.log('Final paths for Google Maps:', paths);
+
+                    // Create polygon
+                    const polygon = new google.maps.Polygon({
+                        paths: paths,  // Now this is the correct format
+                        strokeColor: polygonData.color || '#0073aa',
+                        strokeOpacity: 0.8,
+                        strokeWeight: 2,
+                        fillColor: polygonData.color || '#0073aa',
                         fillOpacity: 0.15,
-                        strokeWeight: 2
+                        map: self.map,
+                        clickable: true
+                    });
+
+                    // Store polygon with data
+                    polygon.data = polygonData;
+                    self.polygons.push(polygon);
+
+                    // Click event
+                    google.maps.event.addListener(polygon, 'click', function(event) {
+                        self.onPolygonClick(polygon, event);
+                    });
+
+                    // Hover events
+                    google.maps.event.addListener(polygon, 'mouseover', function() {
+                        polygon.setOptions({
+                            fillOpacity: 0.3,
+                            strokeWeight: 3
+                        });
+                    });
+
+                    google.maps.event.addListener(polygon, 'mouseout', function() {
+                        polygon.setOptions({
+                            fillOpacity: 0.15,
+                            strokeWeight: 2
+                        });
                     });
                 });
-            });
 
-            console.log('OCLD: Rendered', polygons.length, 'polygons');
-        },
+                console.log('OCLD: Rendered', polygons.length, 'polygons');
+            },
 
         /**
          * Render order markers on map

@@ -155,7 +155,8 @@ class OCLD_Admin {
                 'restUrl'       => rest_url( 'oc-logistics/v1/' ),
                 'restNonce'     => wp_create_nonce( 'wp_rest' ),
                 'mapCenter'     => json_decode( get_option( 'ocld_default_map_center', '{"lat":32.0853,"lng":34.7818}' ) ),
-                'mapZoom'       => intval( get_option( 'ocld_default_map_zoom', 12 ) ),
+//                'mapZoom' => (int) get_option( 'ocld_default_map_zoom', 12 ),
+                'mapZoom' => 12,  // קשיח זמנית
                 'strings'       => array(
                     'loading'           => __( 'Loading...', 'oc-logistics-dashboard' ),
                     'noOrders'          => __( 'No orders found', 'oc-logistics-dashboard' ),
