@@ -199,7 +199,6 @@
                 const self = this;
 
                 polygons.forEach(function(polygonData) {
-                    console.log('Raw coordinates:', polygonData.coordinates);
 
                     // Parse coordinates
                     let parsedData = null;
@@ -235,7 +234,6 @@
                         });
                     });
 
-                    console.log('Final paths for Google Maps:', paths);
 
                     // Create polygon
                     const polygon = new google.maps.Polygon({
@@ -399,8 +397,23 @@
                 return [];
             }
 
+            // Get the polygon object
+            const polygon = this.polygons.find(p => p.data.group_id == groupId);
+            if (!polygon) {
+                return [];
+            }
+
+            // Filter orders that are inside this polygon
+            const self = this;
             return this.currentData.orders.filter(function(order) {
-                return order.group_id == groupId;
+                // Skip orders without coordinates
+                if (!order.lat || !order.lng) {
+                    return false;
+                }
+
+                // Check if order is inside polygon
+                const point = new google.maps.LatLng(parseFloat(order.lat), parseFloat(order.lng));
+                return google.maps.geometry.poly.containsLocation(point, polygon);
             });
         },
 

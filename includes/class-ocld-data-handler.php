@@ -21,40 +21,67 @@ class OCLD_Data_Handler {
     public function get_orders_by_date( $date, $group_id = null, $status = null ) {
         global $wpdb;
 
-        // Build query args
+        // Convert date format
+        $date_obj = DateTime::createFromFormat( 'Y-m-d', $date );
+        $date_formatted = $date_obj ? $date_obj->format( 'd/m/Y' ) : $date;
+
+        error_log( 'OCLD: Searching for delivery date: ' . $date_formatted );
+
+        // Get order IDs with matching delivery date
+        $order_ids = $wpdb->get_col( $wpdb->prepare(
+            "SELECT post_id 
+         FROM {$wpdb->postmeta} 
+         WHERE meta_key = 'ocws_shipping_info_date' 
+         AND meta_value = %s",
+            $date_formatted
+        ) );
+
+        error_log( 'OCLD: Found order IDs: ' . implode( ', ', $order_ids ) );
+
+        if ( empty( $order_ids ) ) {
+            return array();
+        }
+
+        // Build status array
+        $statuses = $status ? array( 'wc-' . $status ) : array( 'wc-pending', 'wc-processing', 'wc-on-hold', 'wc-completed' );
+
+        // Get ALL orders with correct statuses
         $args = array(
-            'limit'      => -1,
-            'type'       => 'shop_order',
-            'status'     => $status ? array( 'wc-' . $status ) : array( 'wc-pending', 'wc-processing', 'wc-completed' ),
-            'meta_query' => array(
-                array(
-                    'key'     => '_ocws_sortable_date',
-                    'value'   => $date,
-                    'compare' => 'LIKE',
-                ),
-            ),
+            'limit'   => -1,
+            'type'    => 'shop_order',
+            'status'  => $statuses,
+            'orderby' => 'ID',
+            'order'   => 'DESC',
         );
+
+        $all_orders = wc_get_orders( $args );
+
+        // Filter manually by order IDs
+        $orders = array_filter( $all_orders, function( $order ) use ( $order_ids ) {
+            return in_array( $order->get_id(), $order_ids );
+        });
+
+        error_log( 'OCLD: After manual ID filter: ' . count( $orders ) . ' orders' );
 
         // Filter by group if specified
         if ( $group_id ) {
-            $args['meta_query'][] = array(
-                'key'   => '_ocws_shipping_group',
-                'value' => $group_id,
-            );
+            $orders = array_filter( $orders, function( $order ) use ( $group_id ) {
+                $order_group = $order->get_meta( '_ocws_shipping_group' );
+                return ! empty( $order_group ) && $order_group == $group_id;
+            });
+            error_log( 'OCLD: After group filter: ' . count( $orders ) . ' orders' );
         }
 
-        // Get orders
-        $orders = wc_get_orders( $args );
-
-        // Format orders for response
+        // Format orders
         $formatted_orders = array();
         foreach ( $orders as $order ) {
             $formatted_orders[] = $this->format_order( $order );
         }
 
+        error_log( 'OCLD: Returning ' . count( $formatted_orders ) . ' formatted orders' );
+
         return $formatted_orders;
     }
-
     /**
      * Format order data for API response.
      *
@@ -66,10 +93,30 @@ class OCLD_Data_Handler {
         // Get shipping info
         $shipping_info = $order->get_meta( '_ocws_shipping_info' );
 
-        // Get coordinates from billing address
+        // Get coordinates
         $coords = $order->get_meta( '_billing_address_coords' );
+        $lat = null;
+        $lng = null;
+
         if ( $coords ) {
-            $coords = json_decode( $coords, true );
+            // Try JSON format first
+            if ( is_string( $coords ) && strpos( $coords, '{' ) === 0 ) {
+                $coords_array = json_decode( $coords, true );
+                if ( isset( $coords_array['lat'] ) ) {
+                    $lat = $coords_array['lat'];
+                    $lng = $coords_array['lng'];
+                }
+            }
+            // Try (lat, lng) format
+            elseif ( is_string( $coords ) && preg_match( '/\(([-\d.]+),\s*([-\d.]+)\)/', $coords, $matches ) ) {
+                $lat = floatval( $matches[1] );
+                $lng = floatval( $matches[2] );
+            }
+            // Already an array
+            elseif ( is_array( $coords ) && isset( $coords['lat'] ) ) {
+                $lat = $coords['lat'];
+                $lng = $coords['lng'];
+            }
         }
 
         // Get group ID
@@ -84,8 +131,8 @@ class OCLD_Data_Handler {
             'customer_name'  => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'address'        => $order->get_billing_address_1(),
             'city'           => $order->get_billing_city(),
-            'lat'            => isset( $coords['lat'] ) ? $coords['lat'] : null,
-            'lng'            => isset( $coords['lng'] ) ? $coords['lng'] : null,
+            'lat'            => $lat,
+            'lng'            => $lng,
             'status'         => $order->get_status(),
             'total'          => $order->get_total(),
             'weight'         => $total_weight,
@@ -100,7 +147,6 @@ class OCLD_Data_Handler {
 
         return $formatted;
     }
-
     /**
      * Calculate total weight of order.
      *
