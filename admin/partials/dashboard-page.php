@@ -104,35 +104,35 @@ if ( ! defined( 'WPINC' ) ) {
         </div>
 
         <!-- Sidebar Panel -->
-        <div class="ocld-sidebar" id="ocld-sidebar">
-
-            <!-- Sidebar Header -->
+        <div class="ocld-sidebar">
             <div class="ocld-sidebar-header">
-                <h2 id="ocld-sidebar-title">
-                    <?php _e( 'Orders', 'oc-logistics-dashboard' ); ?>
-                </h2>
-                <button type="button" class="ocld-sidebar-close" id="ocld-sidebar-close">
-                    <span class="dashicons dashicons-no-alt"></span>
-                </button>
+                <h3 class="ocld-sidebar-title">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    אזורי משלוח
+                </h3>
+                <div class="ocld-sidebar-subtitle">בחר אזור לצפייה בהזמנות</div>
             </div>
-
-            <!-- Sidebar Content -->
-            <div class="ocld-sidebar-content" id="ocld-sidebar-content">
-                <!-- Will be populated by JavaScript -->
-                <div class="ocld-sidebar-placeholder">
-                    <span class="dashicons dashicons-location-alt"></span>
-                    <p><?php _e( 'Click on a polygon or pin to view details', 'oc-logistics-dashboard' ); ?></p>
-                </div>
+            <div class="ocld-sidebar-content">
+                <ul class="ocld-groups-list" id="ocld-groups-list">
+                    <!-- Groups will be populated here -->
+                </ul>
             </div>
+        </div>
 
-            <!-- Sidebar Footer -->
-            <div class="ocld-sidebar-footer" id="ocld-sidebar-footer" style="display: none;">
-                <button type="button" class="button button-primary" id="ocld-print-btn">
-                    <span class="dashicons dashicons-media-document"></span>
-                    <?php _e( 'Print Picking List', 'oc-logistics-dashboard' ); ?>
-                </button>
+        <!-- Stats Bar - Products Summary -->
+        <div class="ocld-stats-bar">
+            <div class="ocld-stats-header">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                </svg>
+                <h3 class="ocld-stats-title">רשימת מוצרים להכנה</h3>
             </div>
-
+            <div class="ocld-products-summary" id="ocld-products-summary">
+                <!-- Products summary will be populated here -->
+            </div>
         </div>
 
     </div>

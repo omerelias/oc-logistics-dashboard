@@ -193,20 +193,42 @@ class OCLD_Data_Handler {
 
         foreach ( $order->get_items() as $item ) {
             $product = $item->get_product();
+            $quantity = $item->get_quantity();
+
+            // Check if product is sold by weight
+            $is_weighted = false;
+            $weight_display = '';
+
+            if ( $product ) {
+                // Check if using your weight plugin
+                $unit = $product->get_meta( '_ocwsu_unit' );
+                $is_weighted = ( $unit === 'kg' || $unit === 'gram' );
+
+                if ( $is_weighted ) {
+                    // For weighted products, quantity IS the weight
+                    if ( $unit === 'gram' ) {
+                        $weight_kg = $quantity / 1000;
+                        $weight_display = number_format( $weight_kg, 3 ) . ' ק"ג';
+                    } else {
+                        $weight_display = number_format( $quantity, 3 ) . ' ק"ג';
+                    }
+                } else {
+                    // For regular products, show quantity as units
+                    $weight_display = number_format( $quantity, 0 ) . ' יח\'';
+                }
+            }
 
             $items[] = array(
-                'name'              => $item->get_name(),
-                'quantity'          => $item->get_quantity(),
-                'quantity_in_units' => $item->get_meta( '_ocwsu_quantity_in_units' ),
-                'unit_weight'       => $item->get_meta( '_ocwsu_unit_weight' ),
-                'total_weight'      => $item->get_meta( '_ocwsu_quantity_in_weight_units' ),
-                'weight_unit'       => $item->get_meta( '_ocwsu_product_weight_units' ),
+                'name'        => $item->get_name(),
+                'quantity'    => $quantity,
+                'weight'      => $is_weighted ? $quantity : 0,
+                'display'     => $weight_display,
+                'is_weighted' => $is_weighted,
             );
         }
 
         return $items;
     }
-
     /**
      * Get shipping groups.
      *

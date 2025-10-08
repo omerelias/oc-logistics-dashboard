@@ -443,3 +443,488 @@
         width: calc(50% - 7.5px);
     }
 }
+
+/* InfoWindow Modern Styling */
+.ocld-info-window {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    padding: 0;
+    min-width: 320px;
+    max-width: 400px;
+}
+
+.ocld-info-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 8px 8px 0 0;
+    margin: -10px -10px 0 -10px;
+}
+
+.ocld-info-order-id {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.ocld-info-customer {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.ocld-info-address {
+    font-size: 13px;
+    opacity: 0.95;
+    line-height: 1.4;
+}
+
+.ocld-info-body {
+    padding: 16px 20px;
+}
+
+.ocld-info-section {
+    margin-bottom: 16px;
+}
+
+.ocld-info-section:last-child {
+    margin-bottom: 0;
+}
+
+.ocld-info-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #64748b;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.ocld-info-value {
+    font-size: 14px;
+    color: #1e293b;
+    font-weight: 500;
+}
+
+.ocld-info-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.ocld-info-meta-item {
+    background: #f8fafc;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border-left: 3px solid #667eea;
+}
+
+.ocld-info-meta-label {
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.ocld-info-meta-value {
+    font-size: 15px;
+    color: #1e293b;
+    font-weight: 600;
+}
+
+/* Products List */
+.ocld-products-list {
+    max-height: 250px;
+    overflow-y: auto;
+    margin-top: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+}
+
+.ocld-product-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.2s;
+}
+
+.ocld-product-item:hover {
+    background: #f8fafc;
+}
+
+.ocld-product-item:last-child {
+    border-bottom: none;
+}
+
+.ocld-product-info {
+    flex: 1;
+}
+
+.ocld-product-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 3px;
+}
+
+.ocld-product-qty {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.ocld-product-weight {
+    font-size: 13px;
+    font-weight: 600;
+    color: #667eea;
+    background: #eef2ff;
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+.ocld-products-summary {
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 2px solid #e2e8f0;
+}
+
+.ocld-summary-label {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.ocld-summary-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #667eea;
+}
+
+/* Status Badge */
+.ocld-status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ocld-status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.ocld-status-processing {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.ocld-status-completed {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.ocld-status-on-hold {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Action Button */
+.ocld-info-actions {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.ocld-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 10px 16px;
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.ocld-edit-btn:hover {
+    background: #5568d3;
+    color: white;
+}
+
+.ocld-edit-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Scrollbar Styling */
+.ocld-products-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ocld-products-list::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.ocld-products-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.ocld-products-list::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+
+
+/* Sidebar Modern Styling */
+.ocld-sidebar {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+.ocld-sidebar-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+}
+
+.ocld-sidebar-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ocld-sidebar-title svg {
+    width: 20px;
+    height: 20px;
+}
+
+.ocld-sidebar-subtitle {
+    font-size: 13px;
+    opacity: 0.9;
+    margin-top: 4px;
+}
+
+.ocld-sidebar-content {
+    padding: 0;
+}
+
+/* Groups List */
+.ocld-groups-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.ocld-group-item {
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s;
+}
+
+.ocld-group-item:last-child {
+    border-bottom: none;
+}
+
+.ocld-group-item:hover {
+    background: #f8fafc;
+}
+
+.ocld-group-item.active {
+    background: #eef2ff;
+    border-left: 4px solid #667eea;
+}
+
+.ocld-group-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    text-decoration: none;
+    color: #1e293b;
+    cursor: pointer;
+}
+
+.ocld-group-item.active .ocld-group-link {
+    padding-right: 16px;
+}
+
+.ocld-group-info {
+    flex: 1;
+}
+
+.ocld-group-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.ocld-group-item.active .ocld-group-name {
+    color: #667eea;
+}
+
+.ocld-group-meta {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.ocld-group-badge {
+    background: #667eea;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    min-width: 32px;
+    text-align: center;
+}
+
+.ocld-group-item.active .ocld-group-badge {
+    background: #5568d3;
+}
+
+/* Stats Bar - Products Summary */
+.ocld-stats-bar {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+.ocld-stats-header {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ocld-stats-header svg {
+    width: 20px;
+    height: 20px;
+}
+
+.ocld-stats-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.ocld-products-summary {
+    padding: 0;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.ocld-product-summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.2s;
+}
+
+.ocld-product-summary-item:hover {
+    background: #f8fafc;
+}
+
+.ocld-product-summary-item:last-child {
+    border-bottom: none;
+}
+
+.ocld-product-summary-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+    flex: 1;
+}
+
+.ocld-product-summary-weight {
+    font-size: 15px;
+    font-weight: 700;
+    color: #10b981;
+    background: #d1fae5;
+    padding: 6px 14px;
+    border-radius: 8px;
+}
+
+.ocld-products-summary-total {
+    background: #f8fafc;
+    padding: 16px 20px;
+    border-top: 2px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ocld-summary-total-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.ocld-summary-total-value {
+    font-size: 18px;
+    font-weight: 800;
+    color: #10b981;
+}
+
+/* Empty State */
+.ocld-empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: #64748b;
+}
+
+.ocld-empty-state svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.ocld-empty-state-text {
+    font-size: 14px;
+}
+
+/* Scrollbar */
+.ocld-products-summary::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ocld-products-summary::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.ocld-products-summary::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.ocld-products-summary::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

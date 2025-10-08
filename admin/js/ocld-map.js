@@ -169,24 +169,22 @@
         renderData: function(data) {
             console.log('OCLD: Rendering data...');
 
-            // Clear existing markers and polygons
             this.clearMap();
 
-            // Render polygons (shipping groups)
             if (data.polygons && data.polygons.length > 0) {
                 this.renderPolygons(data.polygons);
             }
 
-            // Render order markers
             if (data.orders && data.orders.length > 0) {
                 this.renderOrders(data.orders);
             }
 
-            // Update stats
-            this.updateStats(data.stats);
+            if (data.groups && data.groups.length > 0) {
+                this.renderGroups(data.groups);
+            }
 
-            // Populate group filter
-            this.populateGroupFilter(data.groups);
+            // Initial products summary (all orders)
+            this.renderProductsSummary(data.orders);
         },
 
         /**
@@ -282,40 +280,153 @@
             const self = this;
 
             orders.forEach(function(order) {
-                // Check if order has coordinates
                 if (!order.lat || !order.lng) {
-                    console.warn('OCLD: Order', order.id, 'missing coordinates');
+                    console.warn('OCLD: Order ' + order.id + ' missing coordinates');
                     return;
                 }
 
+                const position = {
+                    lat: parseFloat(order.lat),
+                    lng: parseFloat(order.lng)
+                };
+
                 // Create marker
                 const marker = new google.maps.Marker({
-                    position: { lat: parseFloat(order.lat), lng: parseFloat(order.lng) },
+                    position: position,
                     map: self.map,
-                    title: 'Order #' + order.id,
-                    icon: self.getMarkerIcon(order.status),
-                    animation: google.maps.Animation.DROP
+                    title: order.customer_name,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 8,
+                        fillColor: self.getStatusColor(order.status),
+                        fillOpacity: 0.9,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2
+                    }
                 });
 
-                // Store order data
-                marker.data = order;
+                // Create info window content
+                const infoContent = self.createOrderInfoWindow(order);
+
+                const infoWindow = new google.maps.InfoWindow({
+                    content: infoContent
+                });
+
+                marker.addListener('click', function() {
+                    // Close other info windows
+                    self.markers.forEach(function(m) {
+                        if (m.infoWindow) {
+                            m.infoWindow.close();
+                        }
+                    });
+
+                    infoWindow.open(self.map, marker);
+                });
+
+                marker.infoWindow = infoWindow;
                 self.markers.push(marker);
-
-                // Click event
-                google.maps.event.addListener(marker, 'click', function() {
-                    self.onMarkerClick(marker);
-                });
             });
 
-            console.log('OCLD: Rendered', orders.length, 'markers');
+            console.log('OCLD: Rendered ' + self.markers.length + ' markers');
+        },
 
-            // Create marker clusterer
-            if (typeof markerClusterer !== 'undefined') {
-                this.markerClusterer = new markerClusterer.MarkerClusterer({
-                    map: this.map,
-                    markers: this.markers
-                });
-            }
+            createOrderInfoWindow: function(order) {
+                // Status badge
+                const statusClass = 'ocld-status-' + order.status;
+                const statusText = order.status.replace('-', ' ').toUpperCase();
+
+                // Build products list
+                let productsHTML = '';
+                let totalWeight = 0;
+                let hasWeightedItems = false;
+
+                if (order.items && order.items.length > 0) {
+                    productsHTML = '<div class="ocld-products-list">';
+                    order.items.forEach(function(item) {
+                        const itemWeight = parseFloat(item.weight) || 0;
+                        if (itemWeight > 0) {
+                            totalWeight += itemWeight;
+                            hasWeightedItems = true;
+                        }
+
+                        productsHTML += `
+                <div class="ocld-product-item">
+                    <div class="ocld-product-info">
+                        <div class="ocld-product-name">${item.name}</div>
+                        <div class="ocld-product-qty">כמות: ${item.quantity}</div>
+                    </div>
+                    <div class="ocld-product-weight">${item.display}</div>
+                </div>
+            `;
+                    });
+                    productsHTML += '</div>';
+
+                    // Show total weight only if there are weighted items
+                    if (hasWeightedItems) {
+                        productsHTML += `
+                <div class="ocld-products-summary">
+                    <span class="ocld-summary-label">סה"כ משקל:</span>
+                    <span class="ocld-summary-value">${totalWeight.toFixed(3)} ק"ג</span>
+                </div>
+            `;
+                    }
+                }
+
+                return `
+        <div class="ocld-info-window">
+            <div class="ocld-info-header">
+                <div class="ocld-info-order-id">הזמנה #${order.id}</div>
+                <div class="ocld-info-customer">${order.customer_name}</div>
+                <div class="ocld-info-address">${order.address}, ${order.city}</div>
+            </div>
+            <div class="ocld-info-body">
+                <div class="ocld-info-meta">
+                    <div class="ocld-info-meta-item">
+                        <div class="ocld-info-meta-label">סטטוס</div>
+                        <div class="ocld-info-meta-value">
+                            <span class="ocld-status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                    </div>
+                    <div class="ocld-info-meta-item">
+                        <div class="ocld-info-meta-label">סכום</div>
+                        <div class="ocld-info-meta-value">₪${order.total}</div>
+                    </div>
+                </div>
+                
+                ${order.slot_formatted ? `
+                    <div class="ocld-info-meta-item" style="margin-bottom: 12px;">
+                        <div class="ocld-info-meta-label">זמן משלוח</div>
+                        <div class="ocld-info-meta-value">${order.slot_formatted}</div>
+                    </div>
+                ` : ''}
+                
+                <div class="ocld-info-section">
+                    <div class="ocld-info-label">מוצרים להכנה</div>
+                    ${productsHTML}
+                </div>
+                
+                <div class="ocld-info-actions">
+                    <a href="${order.edit_url}" target="_blank" class="ocld-edit-btn">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        ערוך הזמנה
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
+            },
+
+        getStatusColor: function(status) {
+            const colors = {
+                'pending': '#f59e0b',
+                'processing': '#3b82f6',
+                'completed': '#10b981',
+                'on-hold': '#ef4444',
+                'cancelled': '#6b7280'
+            };
+            return colors[status] || '#6b7280';
         },
 
         /**
@@ -608,12 +719,173 @@
             window.open(url, '_blank');
         },
 
+
+        renderGroups: function(groups) {
+            const self = this;
+            const groupsList = document.getElementById('ocld-groups-list');
+
+            if (!groupsList) return;
+
+            groupsList.innerHTML = '';
+
+            // Find first group with orders for default selection
+            let defaultGroupId = null;
+
+            groups.forEach(function(group) {
+                const ordersInGroup = self.currentData.orders.filter(function(order) {
+                    return order.group_id == group.id;
+                });
+
+                if (!defaultGroupId && ordersInGroup.length > 0) {
+                    defaultGroupId = group.id;
+                }
+
+                const li = document.createElement('li');
+                li.className = 'ocld-group-item';
+                li.dataset.groupId = group.id;
+
+                li.innerHTML = `
+            <a class="ocld-group-link">
+                <div class="ocld-group-info">
+                    <div class="ocld-group-name">${group.name}</div>
+                    <div class="ocld-group-meta">${ordersInGroup.length} הזמנות</div>
+                </div>
+                <div class="ocld-group-badge">${ordersInGroup.length}</div>
+            </a>
+        `;
+
+                li.addEventListener('click', function() {
+                    // Remove active from all
+                    document.querySelectorAll('.ocld-group-item').forEach(function(item) {
+                        item.classList.remove('active');
+                    });
+
+                    // Add active to clicked
+                    li.classList.add('active');
+
+                    // Show group details
+                    self.showGroupOrders(group.id);
+                });
+
+                groupsList.appendChild(li);
+            });
+
+            // Select default group
+            if (defaultGroupId) {
+                const defaultItem = groupsList.querySelector(`[data-group-id="${defaultGroupId}"]`);
+                if (defaultItem) {
+                    defaultItem.click();
+                }
+            }
+        },
+
+        renderProductsSummary: function(orders) {
+            const summaryContainer = document.getElementById('ocld-products-summary');
+
+            if (!summaryContainer) return;
+
+            // Aggregate products
+            const productsMap = {};
+            let totalWeight = 0;
+
+            orders.forEach(function(order) {
+                if (!order.items) return;
+
+                order.items.forEach(function(item) {
+                    const key = item.name;
+                    const weight = parseFloat(item.weight) || 0;
+                    const quantity = parseFloat(item.quantity) || 0;
+
+                    if (!productsMap[key]) {
+                        productsMap[key] = {
+                            name: item.name,
+                            weight: 0,
+                            quantity: 0,
+                            is_weighted: item.is_weighted
+                        };
+                    }
+
+                    productsMap[key].weight += weight;
+                    productsMap[key].quantity += quantity;
+
+                    if (weight > 0) {
+                        totalWeight += weight;
+                    }
+                });
+            });
+
+            // Convert to array and sort
+            const products = Object.values(productsMap).sort(function(a, b) {
+                return b.weight - a.weight;
+            });
+
+            // Render
+            if (products.length === 0) {
+                summaryContainer.innerHTML = `
+            <div class="ocld-empty-state">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                </svg>
+                <div class="ocld-empty-state-text">אין מוצרים להצגה</div>
+            </div>
+        `;
+                return;
+            }
+
+            let html = '';
+
+            products.forEach(function(product) {
+                let displayValue;
+                if (product.is_weighted && product.weight > 0) {
+                    displayValue = product.weight.toFixed(3) + ' ק"ג';
+                } else {
+                    displayValue = Math.round(product.quantity) + ' יח\'';
+                }
+
+                html += `
+            <div class="ocld-product-summary-item">
+                <div class="ocld-product-summary-name">${product.name}</div>
+                <div class="ocld-product-summary-weight">${displayValue}</div>
+            </div>
+        `;
+            });
+
+            // Add total
+            if (totalWeight > 0) {
+                html += `
+            <div class="ocld-products-summary-total">
+                <div class="ocld-summary-total-label">סה"כ משקל:</div>
+                <div class="ocld-summary-total-value">${totalWeight.toFixed(3)} ק"ג</div>
+            </div>
+        `;
+            }
+
+            summaryContainer.innerHTML = html;
+        },
+
+        showGroupOrders: function(groupId) {
+            const ordersInGroup = this.getOrdersInPolygon(groupId);
+            this.renderProductsSummary(ordersInGroup);
+
+            // Optional: Zoom to polygon
+            const polygon = this.polygons.find(p => p.data.group_id == groupId);
+            if (polygon) {
+                const bounds = new google.maps.LatLngBounds();
+                polygon.getPath().forEach(function(latLng) {
+                    bounds.extend(latLng);
+                });
+                this.map.fitBounds(bounds);
+            }
+        },
+
         /**
          * Print picking list
          */
         printPickingList: function() {
             window.print(); // Simple for now
         }
+
+
 
     };
 
